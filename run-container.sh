@@ -1,20 +1,34 @@
 #! /usr/bin/env bash
-## startede containeren med
 
 if [ -z "$(groups | grep docker)" ]; then
-	echo "Not in 'docker' group!"
+	echo "Not in 'docker' group."
 	exit 1
 fi
 
+if ! which xhost > /dev/null 2>1 ; then 
+	echo "'xhost' is not installed."
+	exit 1
+fi
+
+
 DOWNLOAD_FOLDER=$(xdg-user-dir DOWNLOAD)
+FIREFOX_FOLDER="$HOME/.mozilla-mid"
+OCES_FOLDER="$HOME/.oces"
+
+if ! [ -d "$OCES_FOLDER" ]; then
+	echo "Put your key files in $OCES_FOLDER."
+	exit 1
+fi
+
+mkdir -p "$FIREFOX_FOLDER"
 
 xhost +local:docker
 
 docker run --rm --name firefox-mid \
    -e DISPLAY=unix$DISPLAY \
-   -v $HOME/.oces:/home/firefox/.oces \
-   -v $DOWNLOAD_FOLDER:/home/firefox/Downloads \
-   -v $HOME/.mozilla-mid:/home/firefox/.mozilla \
+   -v "$OCES_FOLDER":/home/firefox/.oces \
+   -v "$DOWNLOAD_FOLDER":/home/firefox/Downloads \
+   -v "$FIREFOX_FOLDER":/home/firefox/.mozilla \
    --privileged \
    -v /tmp/.X11-unix:/tmp/.X11-unix firefox-medarbejdersignatur \
    --net=host \
@@ -22,7 +36,4 @@ docker run --rm --name firefox-mid \
 
 
 
-## Brug docker rm hvis den allerede kører
-#  ref. https://hub.docker.com/r/chrisdaish/firefox/
-#  xhost +local:docker
 
